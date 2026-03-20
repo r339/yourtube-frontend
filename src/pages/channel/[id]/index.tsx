@@ -10,7 +10,7 @@ import axiosInstance from "@/lib/axiosinstance";
 const ChannelPage = () => {
   const router = useRouter();
   const { id } = router.query;
-  const { user } = useUser();
+  const { user } = useUser() as any;
   const [channelVideos, setChannelVideos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isEditOpen, setIsEditOpen] = useState(false);
