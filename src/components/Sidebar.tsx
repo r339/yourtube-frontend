@@ -7,7 +7,7 @@ import { useUser } from "@/lib/AuthContext";
 import { useRouter } from "next/router";
 
 const Sidebar = () => {
-  const { user } = useUser();
+  const { user } = useUser() as any;
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const router = useRouter();
 

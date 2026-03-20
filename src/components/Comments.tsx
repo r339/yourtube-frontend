@@ -22,8 +22,7 @@ const Comments = ({ videoId }: { videoId: string | string[] | undefined }) => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editText, setEditText] = useState("");
   const [loading, setLoading] = useState(true);
-  const context = useUser();
-const user = context?.user ?? null;
+  const { user } = useUser() as any;
 
   useEffect(() => {
     if (videoId) loadComments();

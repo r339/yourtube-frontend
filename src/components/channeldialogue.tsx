@@ -19,7 +19,7 @@ interface Props {
 }
 
 const Channeldialogue = ({ isopen, onclose, channeldata, mode }: Props) => {
-  const { user, login } = useUser();
+  const { user, login } = useUser() as any;
   const router = useRouter();
   const [formData, setFormData] = useState({ name: "", description: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);

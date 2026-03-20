@@ -13,7 +13,7 @@ const VideoInfo = ({ video }: any) => {
   const [isDisliked, setIsDisliked] = useState(false);
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [isWatchLater, setIsWatchLater] = useState(false);
-  const { user } = useUser();
+  const { user } = useUser() as any;
 
   useEffect(() => {
     setLikes(video.Like || 0);

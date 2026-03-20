@@ -16,7 +16,7 @@ import { useRouter } from "next/router";
 import { useUser } from "@/lib/AuthContext";
 
 const Header = () => {
-  const { user, logout, handlegooglesignin } = useUser();
+  const { user, logout, handlegooglesignin } = useUser() as any;
   const [searchQuery, setSearchQuery] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const router = useRouter();
