@@ -4,7 +4,11 @@ import VideoInfo from "@/components/VideoInfo";
 import VideoPlayer from "@/components/Videopplayer";
 import axiosInstance from "@/lib/axiosinstance";
 import { useRouter } from "next/router";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import { Video } from "lucide-react";
+import dynamic from "next/dynamic";
+
+const VideoCallModal = dynamic(() => import("@/components/VideoCallModal"), { ssr: false });
 
 const WatchPage = () => {
   const router = useRouter();
@@ -13,6 +17,8 @@ const WatchPage = () => {
   const [allVideos, setAllVideos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [showCallModal, setShowCallModal] = useState(false);
+  const commentsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!id || typeof id !== "string") return;
@@ -37,6 +43,16 @@ const WatchPage = () => {
     fetchData();
   }, [id]);
 
+  const handleNextVideo = () => {
+    if (allVideos.length > 0) {
+      router.push(`/watch/${allVideos[0]._id}`);
+    }
+  };
+
+  const handleOpenComments = () => {
+    commentsRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
   if (loading) {
     return (
       <div className="max-w-7xl mx-auto p-4 animate-pulse">
@@ -47,7 +63,14 @@ const WatchPage = () => {
             <div className="h-4 bg-gray-200 rounded w-1/2" />
           </div>
           <div className="space-y-4">
-            {[1,2,3].map(i => <div key={i} className="flex gap-2"><div className="w-40 aspect-video bg-gray-200 rounded" /><div className="flex-1 space-y-2"><div className="h-3 bg-gray-200 rounded" /></div></div>)}
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="flex gap-2">
+                <div className="w-40 aspect-video bg-gray-200 rounded" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-3 bg-gray-200 rounded" />
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -64,19 +87,39 @@ const WatchPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen">
       <div className="max-w-7xl mx-auto p-4">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-4">
-            <VideoPlayer video={video} />
-            <VideoInfo video={video} />
-            <Comments videoId={id} />
+            <VideoPlayer
+              video={video}
+              onNextVideo={handleNextVideo}
+              onOpenComments={handleOpenComments}
+              relatedVideos={allVideos}
+            />
+            <div className="flex items-center justify-between">
+              <VideoInfo video={video} />
+              <button
+                onClick={() => setShowCallModal(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium"
+              >
+                <Video className="w-4 h-4" />
+                Video Call
+              </button>
+            </div>
+            <div ref={commentsRef}>
+              <Comments videoId={id} />
+            </div>
           </div>
           <div className="space-y-4">
             <RelatedVideos videos={allVideos} />
           </div>
         </div>
       </div>
+
+      {showCallModal && (
+        <VideoCallModal onClose={() => setShowCallModal(false)} />
+      )}
     </div>
   );
 };
