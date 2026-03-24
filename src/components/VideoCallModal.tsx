@@ -352,7 +352,7 @@ export default function VideoCallModal({ onClose }: VideoCallModalProps) {
       // Search via all users – we piggyback on channel search by fetching all and filtering
       const res = await axiosInstance.get(`/video/getall`);
       // Get unique uploader names containing query (simple approach)
-      const uploaders = [...new Map(res.data.map((v: any) => [v.uploader, v])).values()];
+      const uploaders = Array.from(new Map(res.data.map((v: any) => [v.uploader, v])).values());
       const filtered = uploaders.filter((v: any) =>
         v.videochanel?.toLowerCase().includes(q.toLowerCase())
       );
