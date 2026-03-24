@@ -70,15 +70,30 @@ function OtpWrapper({ children }: { children: React.ReactNode }) {
     setShowOtpModal(true);
   }, [user, isSouthIndia]);
 
+  // otpDeliveryNote: tells user if SMS fell back to email
+  const [otpDeliveryNote, setOtpDeliveryNote] = useState("");
+
   const handleSendOtp = async (identifier?: string) => {
     const id = identifier || otpIdentifier;
     if (!id) { setOtpError("Please enter a valid identifier."); return; }
     setSendingOtp(true);
     setOtpError("");
+    setOtpDeliveryNote("");
     try {
-      await axiosInstance.post("/otp/send", { identifier: id, type: otpType });
+      const res = await axiosInstance.post("/otp/send", {
+        identifier: id,
+        type: otpType,
+        // Always send fallback email so server can switch to email if SMS fails
+        fallbackEmail: user?.email,
+      });
+      // Server tells us the real identifier used (may differ if SMS fell back to email)
+      const resolvedIdentifier: string = res.data.identifier || id;
+      setOtpIdentifier(resolvedIdentifier);
       setOtpSent(true);
-      setOtpIdentifier(id);
+      // Show a note if SMS wasn't available and email was used instead
+      if (res.data.deliveredVia === "email" && otpType === "sms") {
+        setOtpDeliveryNote(`SMS unavailable — OTP sent to your email (${resolvedIdentifier})`);
+      }
     } catch (err: any) {
       setOtpError(err.response?.data?.message || "Failed to send OTP.");
     } finally {
@@ -162,6 +177,13 @@ function OtpWrapper({ children }: { children: React.ReactNode }) {
               </>
             ) : (
               <>
+                {otpDeliveryNote && (
+                  <div className={`mb-4 p-3 rounded-xl text-xs text-center border ${
+                    isDark ? "bg-yellow-900/30 border-yellow-700 text-yellow-300" : "bg-yellow-50 border-yellow-200 text-yellow-700"
+                  }`}>
+                    ⚠️ {otpDeliveryNote}
+                  </div>
+                )}
                 <p className="text-sm text-center mb-4" style={{ color: "var(--muted-text)" }}>
                   Enter the 6-digit OTP sent to <b>{otpIdentifier}</b>
                 </p>
