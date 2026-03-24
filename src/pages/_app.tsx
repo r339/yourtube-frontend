@@ -60,13 +60,10 @@ function OtpWrapper({ children }: { children: React.ReactNode }) {
     const verified = sessionStorage.getItem(`otp_verified_${user._id}`);
     if (verified === "true") { setOtpVerified(true); return; }
 
-    if (isSouthIndia) {
-      setOtpType("email");
-      setOtpIdentifier(user.email);
-    } else {
-      setOtpType("sms");
-      setOtpIdentifier(user.phone || "");
-    }
+    // Always use email OTP — email is always available from Google login
+    // SMS via Fast2SMS is optional and only activates if FAST2SMS_API_KEY is configured
+    setOtpType("email");
+    setOtpIdentifier(user.email);
     setShowOtpModal(true);
   }, [user, isSouthIndia]);
 
@@ -80,20 +77,9 @@ function OtpWrapper({ children }: { children: React.ReactNode }) {
     setOtpError("");
     setOtpDeliveryNote("");
     try {
-      const res = await axiosInstance.post("/otp/send", {
-        identifier: id,
-        type: otpType,
-        // Always send fallback email so server can switch to email if SMS fails
-        fallbackEmail: user?.email,
-      });
-      // Server tells us the real identifier used (may differ if SMS fell back to email)
-      const resolvedIdentifier: string = res.data.identifier || id;
-      setOtpIdentifier(resolvedIdentifier);
+      await axiosInstance.post("/otp/send", { identifier: id, type: "email" });
+      setOtpIdentifier(id);
       setOtpSent(true);
-      // Show a note if SMS wasn't available and email was used instead
-      if (res.data.deliveredVia === "email" && otpType === "sms") {
-        setOtpDeliveryNote(`SMS unavailable — OTP sent to your email (${resolvedIdentifier})`);
-      }
     } catch (err: any) {
       setOtpError(err.response?.data?.message || "Failed to send OTP.");
     } finally {
@@ -140,32 +126,15 @@ function OtpWrapper({ children }: { children: React.ReactNode }) {
               <div className="text-4xl mb-3">🔐</div>
               <h2 className="text-xl font-bold">Verify Your Identity</h2>
               <p className="text-sm mt-2" style={{ color: "var(--muted-text)" }}>
-                {isSouthIndia
-                  ? "Logging in from South India — OTP sent to your email."
-                  : "We'll verify your mobile number via OTP."}
+                A 6-digit code will be sent to your email address.
               </p>
             </div>
 
             {!otpSent ? (
               <>
-                {otpType === "sms" && !user.phone ? (
-                  <div className="mb-4">
-                    <label className="block text-sm font-medium mb-1">Mobile Number</label>
-                    <input
-                      type="tel"
-                      placeholder="10-digit mobile number"
-                      value={phone}
-                      onChange={(e) => { setPhone(e.target.value); setOtpIdentifier(e.target.value); }}
-                      className={`w-full border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                        isDark ? "bg-[#2d2d2d] border-[#3d3d3d] text-white" : "bg-gray-50 border-gray-300"
-                      }`}
-                    />
-                  </div>
-                ) : (
-                  <div className={`mb-4 p-3 rounded-xl text-sm text-center ${isDark ? "bg-[#2d2d2d]" : "bg-gray-50"}`}>
-                    OTP will be sent to: <span className="font-semibold">{otpIdentifier}</span>
-                  </div>
-                )}
+                <div className={`mb-4 p-3 rounded-xl text-sm text-center ${isDark ? "bg-[#2d2d2d]" : "bg-gray-50"}`}>
+                  OTP will be sent to: <span className="font-semibold">{otpIdentifier}</span>
+                </div>
                 {otpError && <p className="text-red-500 text-sm mb-3">{otpError}</p>}
                 <button
                   onClick={() => handleSendOtp()}
