@@ -7,31 +7,33 @@ const Videogrid = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    const fetchVideos = async () => {
-      try {
-        const res = await axiosInstance.get("/video/getall");
-        setVideos(res.data);
-      } catch (err) {
-        setError("Failed to load videos. Please try again.");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchVideos();
-  }, []);
+  const fetchVideos = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const res = await axiosInstance.get("/video/getall");
+      setVideos(res.data);
+    } catch (err) {
+      setError("Failed to load videos. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { fetchVideos(); }, []);
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mt-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mt-4">
         {Array.from({ length: 8 }).map((_, i) => (
-          <div key={i} className="animate-pulse space-y-3">
-            <div className="aspect-video bg-gray-200 rounded-lg" />
-            <div className="flex gap-3">
-              <div className="w-9 h-9 rounded-full bg-gray-200" />
-              <div className="flex-1 space-y-2">
-                <div className="h-4 bg-gray-200 rounded w-3/4" />
-                <div className="h-3 bg-gray-200 rounded w-1/2" />
+          <div key={i} className="space-y-3">
+            <div className="aspect-video skeleton rounded-xl" />
+            <div className="flex gap-3 px-1">
+              <div className="w-9 h-9 rounded-full skeleton flex-shrink-0" />
+              <div className="flex-1 space-y-2 pt-1">
+                <div className="h-3.5 skeleton rounded w-full" />
+                <div className="h-3.5 skeleton rounded w-3/4" />
+                <div className="h-3 skeleton rounded w-1/2" />
               </div>
             </div>
           </div>
@@ -42,11 +44,14 @@ const Videogrid = () => {
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 text-center">
-        <p className="text-gray-500 text-lg mb-4">{error}</p>
+      <div className="flex flex-col items-center justify-center py-24 text-center animate-fade-in">
+        <div className="text-5xl mb-4">😕</div>
+        <p className="text-lg font-medium mb-2" style={{ color: "hsl(var(--foreground))" }}>
+          {error}
+        </p>
         <button
-          onClick={() => window.location.reload()}
-          className="text-blue-600 hover:underline text-sm"
+          onClick={fetchVideos}
+          className="mt-3 px-6 py-2 rounded-full text-sm font-semibold text-white bg-red-600 hover:bg-red-500 active:scale-95 transition-all"
         >
           Retry
         </button>
@@ -56,14 +61,20 @@ const Videogrid = () => {
 
   if (videos.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 text-center">
-        <p className="text-gray-500 text-lg">No videos yet. Be the first to upload!</p>
+      <div className="flex flex-col items-center justify-center py-24 text-center animate-fade-in">
+        <div className="text-5xl mb-4">🎬</div>
+        <p className="text-lg font-medium" style={{ color: "hsl(var(--foreground))" }}>
+          No videos yet
+        </p>
+        <p className="text-sm mt-1" style={{ color: "var(--muted-text)" }}>
+          Be the first to upload something!
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mt-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 gap-y-6 mt-4">
       {videos.map((video: any) => (
         <Videocard key={video._id} video={video} />
       ))}
